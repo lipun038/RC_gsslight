@@ -1,1 +1,14 @@
-
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="OpportunityLightningController">
+    <lightning:overlayLibrary aura:id="overlayLib"/>
+    <lightning:card title="Confirm">
+        <p style="text-align:center;">
+            Are you sure you want to set the close date to end of Quarter?
+        </p>
+        <hr/>
+        <p style="text-align:center;">
+        	<lightning:button label="No" title="No" onclick="{! c.handleNo }"/>
+            &nbsp;
+            <lightning:button variant="brand" label="Yes" title="Yes" onclick="{! c.handleYes }"/>
+        </p>
+    </lightning:card>
+</aura:component>
