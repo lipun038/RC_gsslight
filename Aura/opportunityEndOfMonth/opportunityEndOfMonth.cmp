@@ -1,5 +1,9 @@
 <aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="OpportunityLightningController">
     <lightning:overlayLibrary aura:id="overlayLib"/>
+    <aura:attribute name="spinner" type="boolean" default="FALSE"/>
+    <aura:if isTrue="{!v.spinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" />
+    </aura:if>    
     <lightning:card title="Confirm">
         <p style="text-align:center;">
             Are you sure you want to set the close date to end of month?
