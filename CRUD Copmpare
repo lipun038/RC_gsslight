@@ -1,0 +1,52 @@
+//For Object Permission
+string csvString = 'Object Name,Permission Name,Commercial Portal Standard User,Commercial Portal Read Only User,OWD Sharing Setting';
+Set<string> sObjectTypeSet = new Set<string>();
+//Map<string,ObjectPermissions> obMap1 = new Map<string,ObjectPermissions>();
+Map<string,ObjectPermissions> obMap2 = new Map<string,ObjectPermissions>();
+Map<string,ObjectPermissions> obMap3 = new Map<string,ObjectPermissions>();
+
+Set<string> owdObjectSet = new Set<string>();
+Map<string,EntityDefinition> owdMap = new Map<string,EntityDefinition>();
+
+
+
+for(ObjectPermissions ob1 : [SELECT SObjectType, PermissionsRead, PermissionsCreate, PermissionsEdit, PermissionsDelete, PermissionsViewAllRecords, PermissionsModifyAllRecords FROM ObjectPermissions WHERE Parent.Profile.Name='System Administrator' ORDER BY SObjectType]){
+	//obMap1.put(ob1.SObjectType,ob1);
+	sObjectTypeSet.add(ob1.SObjectType);
+	list<string> objList = ob1.SObjectType.split('__c');
+	owdObjectSet.add(objList[0]);	
+}
+List<EntityDefinition> owdList = [SELECT DeveloperName, ExternalSharingModel, InternalSharingModel FROM EntityDefinition WHERE DeveloperName IN :owdObjectSet LIMIT 2000];
+for(EntityDefinition owd : owdList){
+	owdMap.put(owd.DeveloperName,owd);    
+}
+
+
+for(ObjectPermissions ob2 : [SELECT SObjectType, PermissionsRead, PermissionsCreate, PermissionsEdit, PermissionsDelete, PermissionsViewAllRecords, PermissionsModifyAllRecords FROM ObjectPermissions WHERE Parent.Profile.Name='Commercial Portal Standard User' ORDER BY SObjectType]){
+	obMap2.put(ob2.SObjectType,ob2); 
+}
+
+for(ObjectPermissions ob3 : [SELECT SObjectType, PermissionsRead, PermissionsCreate, PermissionsEdit, PermissionsDelete, PermissionsViewAllRecords, PermissionsModifyAllRecords FROM ObjectPermissions WHERE Parent.Profile.Name='Commercial Portal Read Only User' ORDER BY SObjectType]){
+	obMap3.put(ob3.SObjectType,ob3); 
+}
+
+for(string sObjectType : sObjectTypeSet){
+	list<string> objList = sObjectType.split('__c');
+	EntityDefinition ed = owdMap.get(objList[0]);
+	string owdSharing = ed == Null ? '' : ed.InternalSharingModel;
+    ObjectPermissions ob2 = obMap2.get(sObjectType);
+	ObjectPermissions ob3 = obMap3.get(sObjectType);
+    csvString += '\n'+sObjectType+',Read,'+ (ob2 == Null ? '0' : ob2.PermissionsRead ? '1':'0')+','+(ob3 == Null ? '0' : ob3.PermissionsRead ? '1':'0')+','+owdSharing;
+    csvString += '\n'+sObjectType+',Create,'+ (ob2 == Null ? '0' : ob2.PermissionsCreate ? '1':'0')+','+(ob3 == Null ? '0' : ob3.PermissionsCreate ? '1':'0')+','+owdSharing;
+    csvString += '\n'+sObjectType+',Edit,'+ (ob2 == Null ? '0' : ob2.PermissionsEdit ? '1':'0')+','+(ob3 == Null ? '0' : ob3.PermissionsEdit ? '1':'0')+','+owdSharing;
+    csvString += '\n'+sObjectType+',Delete,'+ (ob2 == Null ? '0' : ob2.PermissionsDelete ? '1':'0')+','+(ob3 == Null ? '0' : ob3.PermissionsDelete ? '1':'0')+','+owdSharing;
+    csvString += '\n'+sObjectType+',View All,'+ (ob2 == Null ? '0' : ob2.PermissionsViewAllRecords ? '1':'0')+','+(ob3 == Null ? '0' : ob3.PermissionsViewAllRecords ? '1':'0')+','+owdSharing;
+    csvString += '\n'+sObjectType+',Modify All,'+ (ob2 == Null ? '0' : ob2.PermissionsModifyAllRecords ? '1':'0')+','+(ob3 == Null ? '0' : ob3.PermissionsModifyAllRecords ? '1':'0')+','+owdSharing;  
+       
+}
+Attachment att = new Attachment();
+att.Body = Blob.valueOf(csvString);
+att.ContentType = '.csv';
+att.Name = 'Object.csv';
+att.ParentId = '0012M00002DS9Yo';
+insert att;
